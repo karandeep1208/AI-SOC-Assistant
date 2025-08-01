@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>AI SOC Assistant</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #1e1e2f;
+      color: #e0e0e0;
+      padding: 0;
+    }
+
+    header {
+      background-color: #111827;
+      padding: 20px;
+      text-align: center;
+      color: #f9fafb;
+      font-size: 28px;
+      font-weight: bold;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 30px auto;
+      padding: 20px;
+      background-color: #2d2d44;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.4);
+    }
+
+    textarea {
+      width: 100%;
+      height: 200px;
+      background-color: #1f2937;
+      color: #f3f4f6;
+      font-family: monospace;
+      border: none;
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 15px;
+      box-sizing: border-box;
+      resize: vertical;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      margin-top: 15px;
+      background-color: #3b82f6;
+      color: white;
+      font-size: 16px;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #2563eb;
+    }
+
+    .result-section {
+      background-color: #1f2937;
+      padding: 20px;
+      margin-top: 25px;
+      border-radius: 10px;
+      color: #d1d5db;
+    }
+
+    .section {
+      margin-bottom: 20px;
+    }
+
+    .section h3 {
+      margin-bottom: 5px;
+      color: #60a5fa;
+      font-size: 18px;
+    }
+
+    .section p {
+      margin: 0;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <header>⚔️ AI SOC Log Analyzer</header>
+
+  <div class="container">
+    <textarea id="logText" placeholder="Paste your server logs here..."></textarea>
+    <button onclick="analyzeLog()">Analyze Logs</button>
+
+    <div class="result-section" id="result" style="display: none;">
+      <div class="section">
+        <h3>📄 Summary</h3>
+        <p id="summary"></p>
+      </div>
+      <div class="section">
+        <h3>🌐 IP Addresses</h3>
+        <p id="ips"></p>
+      </div>
+      <div class="section">
+        <h3>⚠️ Threats Detected</h3>
+        <p id="threats"></p>
+      </div>
+      <div class="section">
+        <h3>🛡️ Suggested Remediations</h3>
+        <p id="remediation"></p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    async function analyzeLog() {
+      const logText = document.getElementById('logText').value;
+      const resultEl = document.getElementById('result');
+      resultEl.style.display = 'block';
+
+      document.getElementById('summary').textContent = '⏳ Analyzing...';
+
+      try {
+        const res = await fetch('http://localhost:3000/analyze', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ logText }),
+        });
+
+        const data = await res.json();
+        const output = data.result || data.error;
+
+        const lines = output.split('\n');
+
+        let section = 'summary';
+        let summary = '', ips = '', threats = '', remediation = '';
+
+        lines.forEach(line => {
+          const trimmed = line.trim().toLowerCase();
+
+          if (trimmed.startsWith('1.')) section = 'ips';
+          else if (trimmed.startsWith('2.')) section = 'threats';
+          else if (trimmed.startsWith('4.') || trimmed.startsWith('remediation')) section = 'remediation';
+
+          if (section === 'summary') summary += line + '\n';
+          else if (section === 'ips') ips += line + '\n';
+          else if (section === 'threats') threats += line + '\n';
+          else if (section === 'remediation') remediation += line + '\n';
+        });
+
+        document.getElementById('summary').textContent = summary.trim();
+        document.getElementById('ips').textContent = ips.trim();
+        document.getElementById('threats').textContent = threats.trim();
+        document.getElementById('remediation').textContent = remediation.trim();
+
+      } catch (err) {
+        document.getElementById('summary').textContent = '❌ Failed to fetch analysis.';
+        console.error(err);
+      }
+    }
+  </script>
+</body>
+</html>
