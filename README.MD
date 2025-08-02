@@ -19,11 +19,17 @@ Built using Node.js, Express, Gemini API (Google AI), and a simple HTML/CSS fron
 ## 📂 Project Structure
 
 AI-SOC-Assistant/
+
 ├── public/
+
 │   └── index.html          # Frontend UI
+
 ├── .env                    # Environment file (API Key)
+
 ├── index.js                # Express backend server
+
 ├── package.json
+
 └── README.md
 
 ---
